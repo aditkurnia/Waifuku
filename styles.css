@@ -13,8 +13,12 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 #profileIcon{font-size:1.4rem;color:#0b3aa4}
 .title-stack{display:flex;flex-direction:column}
 .chat-title{font-weight:600;line-height:1}
-.chat-subtitle{font-size:.82rem;opacity:.95;display:flex;align-items:center;gap:6px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block}
+.chat-subtitle{font-size:.82rem;opacity:.95;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;box-shadow:0 0 0 2px rgba(255,255,255,.2) inset}
+.status-dot.online{background:#22c55e}
+.status-dot.offline{background:#ef4444}
+.status-dot.checking{background:#f59e0b;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.25);opacity:1}}
 .chat-body{flex:1;overflow-y:auto;background:var(--bg);padding:10px 10px 90px 10px}
 .msg{display:flex;margin:6px 0}
 .msg.ai{justify-content:flex-start}
