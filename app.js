@@ -1,4 +1,4 @@
-const API_KEY='AIzaSyCtxwTNCPD5AjrEm-hCQZxuXVhiwuIeSCY'
+const API_KEY='AIzaSyDIaoU_VrdyW7zRfl3mJk0zC8X1juzDgtg'
 const BASE_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 const STORAGE_KEY='chat_state_v2'
 let state={userName:'',aiName:'Rina Amelia',location:'Jakarta',fictionalTime:'',profileImage:'',conversation:[]}
