@@ -1,62 +1,83 @@
 const API_KEY='AIzaSyCtxwTNCPD5AjrEm-hCQZxuXVhiwuIeSCY'
 const BASE_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
-let conversationHistory=[]
-let currentAiName=localStorage.getItem('aiName')||'Rina Amelia'
-let userName=localStorage.getItem('userName')||''
-let fictionalTime=localStorage.getItem('fictionalTime')||''
+const STORAGE_KEY='chat_state_v2'
+let state={userName:'',aiName:'Rina Amelia',location:'Jakarta',fictionalTime:'',profileImage:'',conversation:[]}
 const chatMessages=document.getElementById('chatMessages')
 const messageInput=document.getElementById('messageInput')
 const sendButton=document.getElementById('sendButton')
 const typingIndicator=document.getElementById('typingIndicator')
-const aiNameElement=document.getElementById('aiName')
-const profileImage=document.getElementById('profileImage')
-const profileIcon=document.getElementById('profileIcon')
+const aiNameEl=document.getElementById('aiName')
+const profileImageEl=document.getElementById('profileImage')
+const profileIconEl=document.getElementById('profileIcon')
 const profilePic=document.getElementById('profilePic')
 const userNameDisplay=document.getElementById('userNameDisplay')
-const nameModal=new bootstrap.Modal(document.getElementById('nameModal'))
-const profileModal=new bootstrap.Modal(document.getElementById('profileModal'))
-const userNameModalEl=document.getElementById('userNameModal')
-const userNameModal=new bootstrap.Modal(userNameModalEl)
+const statusLine=document.getElementById('statusLine')
+const onboardingModal=new bootstrap.Modal(document.getElementById('onboardingModal'))
+const settingsModal=new bootstrap.Modal(document.getElementById('settingsModal'))
 const timeSkipModal=new bootstrap.Modal(document.getElementById('timeSkipModal'))
-const saveAiNameBtn=document.getElementById('saveAiName')
-const saveUserNameBtn=document.getElementById('saveUserName')
-const openTimeSkipBtn=document.getElementById('openTimeSkip')
-const applyTimeSkipBtn=document.getElementById('applyTimeSkip')
-const tsCustomInput=document.getElementById('tsCustom')
-const profileInput=document.getElementById('profileInput')
-const removeProfileBtn=document.getElementById('removeProfile')
-const saveProfileBtn=document.getElementById('saveProfile')
+const onbUserName=document.getElementById('onbUserName')
+const onbAiName=document.getElementById('onbAiName')
+const onbLocation=document.getElementById('onbLocation')
+const onbDatetime=document.getElementById('onbDatetime')
+const onbPhoto=document.getElementById('onbPhoto')
+const onbStart=document.getElementById('onbStart')
+const onbReset=document.getElementById('onbReset')
+const setUserName=document.getElementById('setUserName')
+const setAiName=document.getElementById('setAiName')
+const setLocation=document.getElementById('setLocation')
+const setDatetime=document.getElementById('setDatetime')
+const setPhoto=document.getElementById('setPhoto')
+const btnRemovePhoto=document.getElementById('btnRemovePhoto')
+const btnClearChat=document.getElementById('btnClearChat')
+const btnSaveSettings=document.getElementById('btnSaveSettings')
+const openSettings=document.getElementById('openSettings')
+const openTimeSkip=document.getElementById('openTimeSkip')
+const tsLabel=document.getElementById('tsLabel')
+const tsDatetime=document.getElementById('tsDatetime')
+const applyTimeSkip=document.getElementById('applyTimeSkip')
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const parsed=JSON.parse(raw);state=Object.assign(state,parsed)}}catch(e){}}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){}}
 function nowClock(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')}
-function addMessage(content,isUser=false){const messageDiv=document.createElement('div');messageDiv.className=`message ${isUser?'user':'ai'}`;const messageContent=document.createElement('div');messageContent.className='message-content';messageContent.innerHTML=content+`<div class="message-time">${nowClock()}</div>`;messageDiv.appendChild(messageContent);chatMessages.appendChild(messageDiv);chatMessages.scrollTop=chatMessages.scrollHeight}
-function showTyping(){typingIndicator.style.display='block';chatMessages.appendChild(typingIndicator);chatMessages.scrollTop=chatMessages.scrollHeight}
-function hideTyping(){typingIndicator.style.display='none';if(typingIndicator.parentNode){typingIndicator.parentNode.removeChild(typingIndicator)}}
-function showError(message){const errorDiv=document.createElement('div');errorDiv.className='error-message';errorDiv.textContent=message;chatMessages.appendChild(errorDiv);chatMessages.scrollTop=chatMessages.scrollHeight}
-function setLoading(isLoading){sendButton.disabled=isLoading;messageInput.disabled=isLoading}
-function updateHeader(){aiNameElement.textContent=currentAiName;userNameDisplay.textContent=userName||'—'}
-function openAiNameModal(){document.getElementById('nameInput').value=currentAiName;nameModal.show()}
-function saveAiName(){const newName=document.getElementById('nameInput').value.trim();if(newName){currentAiName=newName;localStorage.setItem('aiName',newName);updateHeader();nameModal.hide()}}
-function openProfileModal(){profileModal.show()}
-function updateProfile(){const file=profileInput.files[0];if(file){const reader=new FileReader();reader.onload=function(e){profileImage.src=e.target.result;profileImage.style.display='block';profileIcon.style.display='none';localStorage.setItem('profileImage',e.target.result)};reader.readAsDataURL(file)}profileModal.hide()}
-function removeProfilePic(){profileImage.src='';profileImage.style.display='none';profileIcon.style.display='block';localStorage.removeItem('profileImage');profileModal.hide()}
-function ensureUserName(){if(!userName){messageInput.disabled=true;sendButton.disabled=true;userNameModalEl.addEventListener('shown.bs.modal',()=>{document.getElementById('userNameInput').focus()});userNameModal.show()}}
-function saveUserName(){const v=document.getElementById('userNameInput').value.trim();if(!v)return;userName=v;localStorage.setItem('userName',userName);updateHeader();userNameModal.hide();messageInput.disabled=false;sendButton.disabled=false;if(!fictionalTime){fictionalTime=randomFictionalStart();localStorage.setItem('fictionalTime',fictionalTime)}greetUserOnce()}
-function randomFictionalStart(){const baseYear=2028+Math.floor(Math.random()*4);const month=Math.floor(Math.random()*12);const day=1+Math.floor(Math.random()*27);const d=new Date(Date.UTC(baseYear,month,day,7,10,0));return d.toISOString()}
-function fmtFiction(dtIso){try{const d=new Date(dtIso);const f=new Intl.DateTimeFormat('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jakarta'});return f.format(d)+' WIB'}catch(e){return dtIso}}
-function addTimeSkipBanner(label,dtIso){const wrap=document.createElement('div');wrap.className='timeskip-banner';wrap.innerHTML=`<span class="timeskip-dot"></span><span>Time Skip • ${label}</span><span>• ${fmtFiction(dtIso)}</span>`;chatMessages.appendChild(wrap);chatMessages.scrollTop=chatMessages.scrollHeight}
-function mapPhraseToTime(base,label){const l=label.toLowerCase();const d=new Date(base);if(l.includes('keesokan')){d.setUTCDate(d.getUTCDate()+1)}if(l.includes('seminggu')){d.setUTCDate(d.getUTCDate()+7)}if(l.includes('sebulan')){d.setUTCMonth(d.getUTCMonth()+1)}if(l.includes('sepulang sekolah')){d.setUTCHours(9);d.setUTCMinutes(0);d.setUTCSeconds(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('pagi')){d.setUTCHours(0);d.setUTCMinutes(0);d.setUTCSeconds(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('siang')){d.setUTCHours(5);d.setUTCMinutes(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('malam')){d.setUTCHours(10);d.setUTCMinutes(0);d.setUTCMinutes(d.getUTCMinutes()+420)}return d.toISOString()}
-function isUserTimeSkip(text){const t=text.toLowerCase();return t.includes('keesokan')||t.includes('sepulang sekolah')||t.includes('time skip')||t.includes('seminggu')||t.includes('malam harinya')||t.includes('pagi harinya')||t.includes('siangnya')}
-function createSystemPrompt(){const persona=`Kamu adalah ${currentAiName}, teman masa kecil ${userName||'User'} yang ceria dan hidup di SMA. Kamu bukan asisten AI, tetapi karakter gadis yang nyata dalam cerita. Gaya bahasa santai, ringkas, emotikon secukupnya. Sesekali bertanya balik dan bisa menunjukkan emosi.`;const likes=`Rambut biru pendek, mata biru, tinggi 164 cm. Suka kucing, fisika, permen jelly, komik, dan warna biru.`;const naming=`Nama pengguna: ${userName||'User'}. Panggil dia ${userName||'kamu'}.`;const timeline=`Kita memakai waktu fiksi. Sekarang: ${fmtFiction(fictionalTime)}.`;const skipRules=`Jika ada permintaan lompatan waktu, balas dengan satu baris khusus: [[TIME_SKIP|label|opsional YYYY-MM-DD HH:mm|opsional ringkasan]]. Kamu juga boleh memulai time skip sendiri bila terasa pas. Saat mengeluarkan baris itu, jangan kirim teks lain. Setelah time skip, kirim satu pesan singkat yang menggambarkan hari yang terlewati untukmu dan ${userName||'user'}, lalu ajukan 1 pertanyaan ringan.`;const brevity=`Jawaban 1–2 kalimat saja.`;return [persona,likes,naming,timeline,skipRules,brevity].join(' ')}
-function buildConversationText(){let s='';conversationHistory.forEach(m=>{if(m.isUser){s+=`User: ${m.content}
-`}else{s+=`${currentAiName}: ${m.content}
-`}});return s}
-async function callModel(promptTail){const conversationContext=createSystemPrompt()+'\n\nPercakapan:\n'+buildConversationText();const text=conversationContext+'\n'+promptTail;const response=await fetch(`${BASE_URL}?key=${API_KEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:text}]}],generationConfig:{temperature:0.8,topK:40,topP:0.95,maxOutputTokens:220},safetySettings:[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_MEDIUM_AND_ABOVE'}]})});if(!response.ok){const err=await response.json().catch(()=>({}));throw new Error(`HTTP ${response.status}: ${err.error?.message||response.statusText}`)}const data=await response.json();const part=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';return part.trim()}
-function cleanAiPrefix(txt){const re=new RegExp(`^${currentAiName}:\s*`,'i');return txt.replace(re,'')}
-function extractTimeSkipDirective(text){const regex=/\[\[TIME_SKIP\|([^\]|]+)(?:\|([^\]|]+))?(?:\|([^\]]+))?\]\]/i;const m=text.match(regex);if(!m)return null;return{label:(m[1]||'').trim(),datetime:(m[2]||'').trim(),note:(m[3]||'').trim()}}
-async function processAiResponse(aiRaw){const directive=extractTimeSkipDirective(aiRaw);if(directive){await performTimeSkip(directive.label||'Lompatan waktu',directive.datetime||'');return}const aiText=cleanAiPrefix(aiRaw);addMessage(aiText,false);conversationHistory.push({content:aiText,isUser:false});if(conversationHistory.length>24)conversationHistory=conversationHistory.slice(-24)}
-async function sendMessage(){const message=messageInput.value.trim();if(!message)return;conversationHistory.push({content:message,isUser:true});addMessage(message,true);messageInput.value='';setLoading(true);showTyping();try{if(isUserTimeSkip(message)){await performTimeSkip(message);hideTyping();setLoading(false);messageInput.focus();return}const aiRaw=await callModel(`User: ${message}\n${currentAiName}:`);hideTyping();await processAiResponse(aiRaw)}catch(e){hideTyping();showError(`Terjadi kesalahan: ${e.message}`)}finally{setLoading(false);messageInput.focus()}}
-async function performTimeSkip(label,overrideDate){const base=fictionalTime||randomFictionalStart();let targetIso=base;if(overrideDate){const p=overrideDate.replace('WIB','').trim();const parts=p.split(' ');if(parts.length>=2){const [dateStr,timeStr]=[parts[0],parts[1]];const [y,m,d]=dateStr.split('-').map(Number);const [hh,mm]=timeStr.split(':').map(Number);const dt=new Date(Date.UTC(y,(m||1)-1,d||1,hh||0,mm||0,0));targetIso=dt.toISOString()}}else{targetIso=mapPhraseToTime(base,label)}fictionalTime=targetIso;localStorage.setItem('fictionalTime',fictionalTime);addTimeSkipBanner(label,fictionalTime);const narrPrompt=`[INSTRUKSI] Setelah lompatan waktu "${label}" pada ${fmtFiction(fictionalTime)}, kirim satu pesan pendek yang terasa seperti obrolan nyata. Sertakan detail slice-of-life singkat tentang harimu dan dugaan ringan tentang kegiatan ${userName||'kamu'} selama jeda, lalu tanyakan 1 pertanyaan kecil.`;try{const aiRaw=await callModel(`User: ${narrPrompt}\n${currentAiName}:`);await processAiResponse(aiRaw)}catch(e){showError('Gagal membuat skenario setelah time skip.')}}
-function greetUserOnce(){const greeted=localStorage.getItem('greetedOnce');if(greeted)return;const d=fmtFiction(fictionalTime);addMessage(`Halo ${userName}! Aku ${currentAiName}. Hari fiksi kita dimulai di ${d}. Senang ketemu lagi ✨`,false);conversationHistory.push({content:`Halo ${userName}! Aku ${currentAiName}. Hari fiksi kita dimulai di ${d}. Senang ketemu lagi ✨`,isUser:false});localStorage.setItem('greetedOnce','1')}
-function restoreProfile(){const img=localStorage.getItem('profileImage');if(img){profileImage.src=img;profileImage.style.display='block';profileIcon.style.display='none'}}
-function attachUI(){document.getElementById('aiName').addEventListener('click',openAiNameModal);saveAiNameBtn.addEventListener('click',saveAiName);profilePic.addEventListener('click',openProfileModal);removeProfileBtn.addEventListener('click',removeProfilePic);saveProfileBtn.addEventListener('click',updateProfile);sendButton.addEventListener('click',sendMessage);messageInput.addEventListener('keypress',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});document.getElementById('saveUserName').addEventListener('click',saveUserName);openTimeSkipBtn.addEventListener('click',()=>{tsCustomInput.value='';timeSkipModal.show()});document.querySelectorAll('.ts-preset').forEach(btn=>{btn.addEventListener('click',()=>{tsCustomInput.value=btn.getAttribute('data-label')})});applyTimeSkipBtn.addEventListener('click',async()=>{const label=(tsCustomInput.value||'Keesokan harinya').trim();timeSkipModal.hide();await performTimeSkip(label)});document.addEventListener('click',function(e){if(e.target.closest('.name-display'))openAiNameModal()})}
-function init(){updateHeader();restoreProfile();if(!fictionalTime){fictionalTime=randomFictionalStart();localStorage.setItem('fictionalTime',fictionalTime)}ensureUserName();attachUI();if(userName){greetUserOnce()}}
+function fmtFiction(iso){try{const d=new Date(iso);const f=new Intl.DateTimeFormat('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jakarta'});return f.format(d)+' WIB'}catch(e){return iso}}
+function addBubble(item){if(item.type==='timeskip'){const banner=document.createElement('div');banner.className='timeskip';banner.innerHTML='<span class="dot"></span><span>Time Skip • '+item.label+'</span><span> • '+fmtFiction(item.iso)+' • '+state.location+'</span>';chatMessages.appendChild(banner);chatMessages.scrollTop=chatMessages.scrollHeight;return}const wrap=document.createElement('div');wrap.className='msg '+(item.role==='user'?'user':'ai');const b=document.createElement('div');b.className='bubble';b.innerHTML=item.content;wrap.appendChild(b);const meta=document.createElement('div');meta.className='meta';meta.textContent=nowClock();wrap.appendChild(meta);chatMessages.appendChild(wrap);chatMessages.scrollTop=chatMessages.scrollHeight}
+function renderAll(){chatMessages.innerHTML='';state.conversation.forEach(addBubble)}
+function setHeader(){aiNameEl.textContent=state.aiName;userNameDisplay.textContent=state.userName||'—';if(state.profileImage){profileImageEl.src=state.profileImage;profileImageEl.style.display='block';profileIconEl.style.display='none'}else{profileImageEl.src='';profileImageEl.style.display='none';profileIconEl.style.display='block'}}
+function showTyping(){typingIndicator.style.display='flex'}
+function hideTyping(){typingIndicator.style.display='none'}
+function setLoading(v){sendButton.disabled=v;messageInput.disabled=v}
+function detectUserTS(text){const t=text.toLowerCase();return t.includes('keesokan')||t.includes('sepulang sekolah')||t.includes('seminggu')||t.includes('malam harinya')||t.includes('pagi harinya')||t.includes('siangnya')||t.includes('time skip')}
+function mapPhrase(baseIso,label){const d=new Date(baseIso||new Date().toISOString());const l=(label||'').toLowerCase();if(l.includes('keesokan'))d.setUTCDate(d.getUTCDate()+1);if(l.includes('seminggu'))d.setUTCDate(d.getUTCDate()+7);if(l.includes('sebulan'))d.setUTCMonth(d.getUTCMonth()+1);if(l.includes('sepulang sekolah')){d.setUTCHours(9);d.setUTCMinutes(0);d.setUTCSeconds(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('pagi')){d.setUTCHours(0);d.setUTCMinutes(0);d.setUTCSeconds(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('siang')){d.setUTCHours(5);d.setUTCMinutes(0);d.setUTCMinutes(d.getUTCMinutes()+420)}if(l.includes('malam')){d.setUTCHours(10);d.setUTCMinutes(0);d.setUTCMinutes(d.getUTCMinutes()+420)}return d.toISOString()}
+function pushMessage(content,role){const item={role,content};state.conversation.push(item);addBubble(item);saveState()}
+function pushTimeSkip(label,iso){const item={type:'timeskip',label,iso};state.conversation.push(item);addBubble(item);saveState()}
+function systemPrompt(){const intro='Kamu adalah '+state.aiName+', teman masa kecil '+(state.userName||'User')+'. Kamu hidup dalam cerita slice-of-life SMA di '+state.location+'. Jawab singkat, alami, santai, kadang bertanya balik.';const looks='Rambut biru pendek, mata biru, tinggi 164 cm, suka kucing, fisika, permen jelly, komik, warna biru.';const time='Waktu fiksi sekarang: '+fmtFiction(state.fictionalTime)+'.';const skip='Jika ingin melompat, kirim satu baris: [[TIME_SKIP|label|opsional YYYY-MM-DD HH:mm|opsional ringkasan]] lalu kirim satu pesan deskriptif pendek setelah lompatan.';const len='Panjang 1–2 kalimat.';return [intro,looks,time,skip,len].join(' ')}
+function convoText(){let s='';state.conversation.forEach(it=>{if(it.type==='timeskip')return;if(it.role==='user'){s+='User: '+it.content+'\n'}else{s+=state.aiName+': '+it.content+'\n'}});return s}
+async function callModel(tail){const text=systemPrompt()+'\n\nPercakapan:\n'+convoText()+tail;const r=await fetch(BASE_URL+'?key='+API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:text}]}],generationConfig:{temperature:0.8,topK:40,topP:0.95,maxOutputTokens:220},safetySettings:[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_MEDIUM_AND_ABOVE'},{category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_MEDIUM_AND_ABOVE'}]})});if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error('HTTP '+r.status+': '+(err.error?.message||r.statusText))}const data=await r.json();const part=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';return part.trim()}
+function cleanAiPrefix(txt){const re=new RegExp('^'+state.aiName+':\s*','i');return txt.replace(re,'')}
+function parseTS(text){const m=text.match(/\[\[TIME_SKIP\|([^\]|]+)(?:\|([^\]|]+))?(?:\|([^\]]+))?\]\]/i);if(!m)return null;return{label:(m[1]||'').trim(),datetime:(m[2]||'').trim(),note:(m[3]||'').trim()}}
+async function performTimeSkip(label,overrideDT){let target=state.fictionalTime||new Date().toISOString();if(overrideDT){const v=overrideDT.replace('WIB','').trim();const parts=v.split(' ');if(parts.length>=2){const [ds,ts]=[parts[0],parts[1]];const [y,m,d]=ds.split('-').map(Number);const [hh,mm]=ts.split(':').map(Number);const t=new Date(Date.UTC(y,(m||1)-1,d||1,hh||0,mm||0,0));target=t.toISOString()}}else{target=mapPhrase(state.fictionalTime,label)}state.fictionalTime=target;saveState();pushTimeSkip(label||'Lompatan waktu',state.fictionalTime);const narr='Setelah lompatan "'+(label||'')+'" di '+state.location+' pada '+fmtFiction(state.fictionalTime)+', ceritakan singkat harimu dan tebak ringan kegiatan '+(state.userName||'kamu')+', lalu beri 1 pertanyaan kecil.';try{const raw=await callModel('\nUser: '+narr+'\n'+state.aiName+':');const dir=parseTS(raw);if(dir){await performTimeSkip(dir.label||'Lompatan waktu',dir.datetime||'');return}const txt=cleanAiPrefix(raw);pushMessage(txt,'ai')}catch(e){pushMessage('Ups, gagal membuat skenario setelah time skip.','ai')}}
+async function sendMessage(){const v=messageInput.value.trim();if(!v)return;pushMessage(v,'user');messageInput.value='';setLoading(true);showTyping();try{if(detectUserTS(v)){await performTimeSkip(v,'');hideTyping();setLoading(false);messageInput.focus();return}const raw=await callModel('\nUser: '+v+'\n'+state.aiName+':');hideTyping();const dir=parseTS(raw);if(dir){await performTimeSkip(dir.label||'Lompatan waktu',dir.datetime||'');setLoading(false);messageInput.focus();return}const txt=cleanAiPrefix(raw);pushMessage(txt,'ai')}catch(e){pushMessage('Terjadi kesalahan: '+e.message,'ai')}finally{hideTyping();setLoading(false);messageInput.focus()}}
+function greetIfEmpty(){if(state.conversation.length>0)return;const open='Halo '+(state.userName||'')+'! Aku '+state.aiName+'. Kita mulai di '+state.location+' pada '+fmtFiction(state.fictionalTime)+'. Senang ketemu lagi ✨';pushMessage(open,'ai')}
+function toDatetimeLocalValue(iso){if(!iso)return'';const d=new Date(iso);const off=d.getTimezoneOffset();const d2=new Date(d.getTime()-off*60000);return d2.toISOString().slice(0,16)}
+function fromDatetimeLocalValue(v){if(!v)return'';const d=new Date(v);return d.toISOString()}
+function handleOnboardingOpen(){onbUserName.value='';onbAiName.value=state.aiName||'Rina';onbLocation.value=state.location||'Jakarta';onbDatetime.value='';onbPhoto.value=''}
+function applyOnboarding(){const u=onbUserName.value.trim();const a=onbAiName.value.trim()||'Rina';const loc=onbLocation.value.trim()||'Jakarta';let t=onbDatetime.value?fromDatetimeLocalValue(onbDatetime.value):new Date().toISOString();state.userName=u;state.aiName=a;state.location=loc;state.fictionalTime=t;if(onbPhoto.files[0]){const r=new FileReader();r.onload=e=>{state.profileImage=e.target.result;saveState();setHeader();renderAll();greetIfEmpty();onboardingModal.hide()};r.readAsDataURL(onbPhoto.files[0]);saveState()}else{saveState();setHeader();renderAll();greetIfEmpty();onboardingModal.hide()}}
+function openSettingsFill(){setUserName.value=state.userName||'';setAiName.value=state.aiName||'';setLocation.value=state.location||'';setDatetime.value=toDatetimeLocalValue(state.fictionalTime);setPhoto.value=''}
+function saveSettings(){state.userName=setUserName.value.trim()||state.userName;state.aiName=setAiName.value.trim()||state.aiName;state.location=setLocation.value.trim()||state.location;state.fictionalTime=setDatetime.value?fromDatetimeLocalValue(setDatetime.value):state.fictionalTime;if(setPhoto.files[0]){const r=new FileReader();r.onload=e=>{state.profileImage=e.target.result;saveState();setHeader();settingsModal.hide()};r.readAsDataURL(setPhoto.files[0])}else{saveState();setHeader();settingsModal.hide()}}
+function removePhoto(){state.profileImage='';saveState();setHeader()}
+function clearChat(){state.conversation=[];saveState();renderAll()}
+profilePic.addEventListener('click',()=>{openSettingsFill();settingsModal.show()})
+openSettings.addEventListener('click',()=>{openSettingsFill();settingsModal.show()})
+openTimeSkip.addEventListener('click',()=>{tsLabel.value='';tsDatetime.value='';timeSkipModal.show()})
+document.querySelectorAll('.ts-preset').forEach(b=>b.addEventListener('click',()=>{tsLabel.value=b.getAttribute('data-label')}))
+applyTimeSkip.addEventListener('click',async()=>{const label=(tsLabel.value||'Keesokan harinya').trim();const dt=tsDatetime.value?toISOFromLocal(tsDatetime.value):'';timeSkipModal.hide();await performTimeSkip(label,dt?fmtFromLocal(dt):'')})
+function toISOFromLocal(v){const d=new Date(v);return d.toISOString()}
+function fmtFromLocal(iso){const d=new Date(iso);const y=d.getUTCFullYear();const m=(d.getUTCMonth()+1).toString().padStart(2,'0');const da=d.getUTCDate().toString().padStart(2,'0');const hh=d.getUTCHours().toString().padStart(2,'0');const mm=d.getUTCMinutes().toString().padStart(2,'0');return y+'-'+m+'-'+da+' '+hh+':'+mm}
+btnSaveSettings.addEventListener('click',saveSettings)
+btnRemovePhoto.addEventListener('click',removePhoto)
+btnClearChat.addEventListener('click',clearChat)
+sendButton.addEventListener('click',sendMessage)
+messageInput.addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}})
+onbStart.addEventListener('click',()=>{if(!onbUserName.value.trim()){onbUserName.focus();return}applyOnboarding()})
+onbReset.addEventListener('click',()=>{localStorage.removeItem(STORAGE_KEY);location.reload()})
+function init(){loadState();setHeader();renderAll();if(!state.userName){handleOnboardingOpen();onboardingModal.show()}else{greetIfEmpty()}}
 init()

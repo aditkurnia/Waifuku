@@ -2,161 +2,161 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat ai</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Chat Biru Putih</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="styles.css" rel="stylesheet">
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="profile-section">
+  <div class="app-shell">
+    <header class="chat-header">
+      <div class="left-group">
         <div class="profile-pic" id="profilePic">
-          <img id="profileImage" src="" alt="Profile" style="display:none">
+          <img id="profileImage" src="" alt="AI">
           <i class="bi bi-person-fill" id="profileIcon"></i>
         </div>
-        <div class="profile-info">
-          <h5 class="name-display" id="aiName"></h5>
-          <small><i class="bi bi-circle-fill"></i> Online • Kamu: <span id="userNameDisplay"></span></small>
+        <div class="title-stack">
+          <div class="chat-title" id="aiName">Rina</div>
+          <div class="chat-subtitle"><span class="status-dot"></span><span id="statusLine">Online • Kamu: <span id="userNameDisplay">—</span></span></div>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="callBtn" title="Panggil"><i class="bi bi-telephone-fill"></i></button>
-        <button class="icon-btn" id="videoBtn" title="Video Call"><i class="bi bi-camera-video-fill"></i></button>
-        <button class="icon-btn" id="menuBtn" title="Menu"><i class="bi bi-three-dots-vertical"></i></button>
+      <div class="right-group">
+        <button class="icon-btn" id="openTimeSkip" title="Time Skip"><i class="bi bi-fast-forward-fill"></i></button>
+        <button class="icon-btn" id="openSettings" title="Pengaturan"><i class="bi bi-gear-fill"></i></button>
       </div>
-    </div>
+    </header>
 
-    <div class="chat-messages" id="chatMessages">
-      <div class="message ai">
-        <div class="message-content">
-          Hai! Sepertinya kita pernah bertemu?🤔
-          <div class="message-time">12:00</div>
-        </div>
-      </div>
-    </div>
+    <main class="chat-body" id="chatMessages"></main>
 
     <div class="typing-indicator" id="typingIndicator">
-      <span class="typing-dots">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
+      <span class="dots">
+        <span></span><span></span><span></span>
       </span>
       <span class="typing-text">mengetik...</span>
     </div>
 
-    <div class="chat-input">
-      <div class="input-group">
-        <button class="btn btn-outline-light ts-btn" id="openTimeSkip"><i class="bi bi-fast-forward-fill"></i> Time Skip</button>
-        <input type="text" class="input-field" id="messageInput" placeholder="Ketik pesan..." maxlength="1000">
-        <button class="send-button" id="sendButton">
-          <i class="bi bi-send-fill"></i>
-        </button>
+    <footer class="chat-inputbar">
+      <div class="input-wrap">
+        <input type="text" id="messageInput" class="form-control message-input" placeholder="Ketik pesan" maxlength="1000">
+        <button class="send-btn" id="sendButton"><i class="bi bi-send-fill"></i></button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal fade" id="onboardingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content onb">
+        <div class="modal-header">
+          <h5 class="modal-title">Mulai Percakapan</h5>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Namamu</label>
+              <input type="text" id="onbUserName" class="form-control" placeholder="Contoh: Adit" maxlength="30">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Nama AI</label>
+              <input type="text" id="onbAiName" class="form-control" placeholder="Contoh: Rina" value="Rina Amelia" maxlength="30">
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label">Tempat</label>
+              <input type="text" id="onbLocation" class="form-control" placeholder="Contoh: Jakarta" value="Jakarta" maxlength="40">
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label">Waktu Fiksi</label>
+              <input type="datetime-local" id="onbDatetime" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Foto Profil AI</label>
+              <input type="file" id="onbPhoto" class="form-control" accept="image/*">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" id="onbReset">Reset</button>
+          <button class="btn btn-primary" id="onbStart">Mulai Chat</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="nameModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
+  <div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content onb">
         <div class="modal-header">
-          <h5 class="modal-title">Ubah Nama AI</h5>
+          <h5 class="modal-title">Pengaturan</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label for="nameInput" class="form-label">Nama Baru</label>
-            <input type="text" class="form-control" id="nameInput" placeholder="Masukkan nama..." maxlength="30">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Namamu</label>
+              <input type="text" id="setUserName" class="form-control" maxlength="30">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Nama AI</label>
+              <input type="text" id="setAiName" class="form-control" maxlength="30">
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label">Tempat</label>
+              <input type="text" id="setLocation" class="form-control" maxlength="40">
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label">Waktu Fiksi</label>
+              <input type="datetime-local" id="setDatetime" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Foto Profil AI</label>
+              <input type="file" id="setPhoto" class="form-control" accept="image/*">
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-outline-danger btn-sm" id="btnRemovePhoto">Hapus Foto</button>
+                <button class="btn btn-outline-secondary btn-sm" id="btnClearChat">Hapus Chat</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary" id="saveAiName">Simpan</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="profileModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Ubah Foto Profil</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="profileInput" class="form-label">Pilih Foto</label>
-            <input type="file" class="form-control" id="profileInput" accept="image/*">
-          </div>
-          <div class="text-center">
-            <button type="button" class="btn btn-outline-danger" id="removeProfile">Hapus Foto</button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary" id="saveProfile">Simpan</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="userNameModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Selamat datang</h5>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="userNameInput" class="form-label">Masukkan namamu</label>
-            <input type="text" class="form-control" id="userNameInput" placeholder="Contoh: Adit" maxlength="30">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="saveUserName">Mulai</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+          <button class="btn btn-primary" id="btnSaveSettings">Simpan</button>
         </div>
       </div>
     </div>
   </div>
 
   <div class="modal fade" id="timeSkipModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content onb">
         <div class="modal-header">
           <h5 class="modal-title">Time Skip</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="row g-2 mb-3">
-            <div class="col-6">
-              <button class="btn btn-outline-light w-100 ts-preset" data-label="Keesokan harinya">Keesokan harinya</button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-outline-light w-100 ts-preset" data-label="Sepulang sekolah">Sepulang sekolah</button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-outline-light w-100 ts-preset" data-label="Malam harinya">Malam harinya</button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-outline-light w-100 ts-preset" data-label="Seminggu kemudian">Seminggu kemudian</button>
-            </div>
+            <div class="col-6"><button class="btn btn-outline-primary w-100 ts-preset" data-label="Keesokan harinya">Keesokan harinya</button></div>
+            <div class="col-6"><button class="btn btn-outline-primary w-100 ts-preset" data-label="Sepulang sekolah">Sepulang sekolah</button></div>
+            <div class="col-6"><button class="btn btn-outline-primary w-100 ts-preset" data-label="Malam harinya">Malam harinya</button></div>
+            <div class="col-6"><button class="btn btn-outline-primary w-100 ts-preset" data-label="Seminggu kemudian">Seminggu kemudian</button></div>
           </div>
-          <div class="mb-3">
-            <label for="tsCustom" class="form-label">Atau tulis sendiri</label>
-            <input type="text" class="form-control" id="tsCustom" placeholder="Contoh: Pagi harinya, di halte">
+          <div class="row g-2">
+            <div class="col-12">
+              <input type="text" id="tsLabel" class="form-control" placeholder="Tulis label, contoh: Pagi di halte">
+            </div>
+            <div class="col-12">
+              <input type="datetime-local" id="tsDatetime" class="form-control">
+            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary" id="applyTimeSkip">Lanjut</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary" id="applyTimeSkip">Lanjut</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
